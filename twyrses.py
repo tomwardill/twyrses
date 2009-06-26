@@ -253,6 +253,7 @@ class Twyrses(object):
 				self.set_header_text("authenticating...", 0)
 				user.screen_name = params[0]
 				user.password = params[1]
+				update_terminal_header(user.screen_name)
 			else:
 				self.set_header_text("logging out...", 0)	
 				user.screen_name = None
@@ -470,6 +471,9 @@ class Twyrses(object):
 			return None
 		return configdict.get(section, setting)
 		
+def update_terminal_header(update):
+	print "\033]0;twyrses for " + update +"\007"
+
 def main():
 	if len(sys.argv) > 1:	
 		try:
@@ -478,8 +482,6 @@ def main():
 		except:
 			sys.stderr.write(__doc__)
 			return
-			
-		print "\033]0;twyrses for " + user.screen_name +"\007"
 	else:
 		try:
 			configdict.read('twyrses.conf')
@@ -488,6 +490,10 @@ def main():
 		except Exception, err:
 			print err
 			print "config file not found"
+	
+	if user.screen_name:
+		update_terminal_header(user.screen_name)
+			
 	Twyrses().main()
 
 if __name__ == '__main__':
