@@ -41,7 +41,7 @@ twyrses.py [username]
 import sys, getpass, pickle
 import datetime
 from string import zfill
-import urwid, urwid.curses_display
+import urwid, urwid.curses_display, urwid.raw_display
 import twitter
 from urllib2 import HTTPError
 
@@ -127,7 +127,7 @@ class Twyrses(object):
 	
 	def main(self):
 		""" """
-		self.ui = urwid.curses_display.Screen()
+		self.ui = urwid.raw_display.Screen()
 		theme = self.get_config_value("THEME", "theme_name")
 		if theme:
 			self.set_theme([theme])
@@ -212,6 +212,7 @@ class Twyrses(object):
 					
 			self.draw_screen()
 			self.top.set_focus('header')
+			self.draw_screen()
 			
 	def handle_command(self, msg):
 		"""farm out the command to the correct method, 
@@ -235,7 +236,6 @@ class Twyrses(object):
 		elif cmd == 'q':
 			self.set_header_text("bye then")
 			self.exit = True
-			self.ui.stop()
 			
 		elif cmd == 'follows':
 			if not len(params) == 2:
@@ -263,9 +263,8 @@ class Twyrses(object):
 
 		elif cmd == 'theme':
 			self.draw_screen()
-			self.ui.stop()
+			self.ui.clear()
 			self.set_theme(params)
-			self.ui.start()
 			self.get_timeline()
 			self.draw_timeline()
 						
@@ -335,6 +334,7 @@ class Twyrses(object):
 	def set_theme(self, params):
 		if len(params) == 0:
 			self.header.set_text('Enter a theme name')
+			print self.ui.palette
 			return
 		theme_name = params[0]
 		
