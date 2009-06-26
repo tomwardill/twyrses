@@ -303,6 +303,26 @@ class Twyrses(object):
 			self.draw_timeline()
 			self.last_refresh_command = msg
 			self.set_refresh_timeout()
+			
+		elif cmd == 'unfollow':
+			if len(params) > 0:
+				self.set_header_text('unfollowing....')
+				self.draw_screen()
+				self.unfollow(params)
+				self.get_timeline(cmd=params[0])	
+				self.draw_timeline()
+				self.last_refresh_command = msg
+				self.set_refresh_timeout()
+			
+		elif cmd == 'follow':
+			if len(params) > 0:
+				self.set_header_text('following.....')
+				self.draw_screen()
+				self.follow(params)
+				self.get_timeline(cmd=params[0])	
+				self.draw_timeline()
+				self.last_refresh_command = msg
+				self.set_refresh_timeout()
 				
 	def draw_screen(self):
 		""" """
@@ -417,6 +437,19 @@ class Twyrses(object):
 	## Twitter Api calls
 	#############################################
 		
+	def unfollow(self, params):
+		"""unfollow a user, mostly used for certain 'celebrity twitards'"""
+		if user.screen_name:
+			for param in params:
+				api = twitter.Api(str(user.screen_name), str(user.password))
+				api.DestroyFriendship(param)
+
+	def follow(self, params):
+		if user.screen_name:
+			for param in params:
+				api = twitter.Api(str(user.screen_name), str(user.password))
+				api.CreateFriendship(param)
+	
 	def get_timeline(self, cmd=None):
 		"""Get yer timeline on"""
 		
