@@ -260,6 +260,12 @@ class Twyrses(object):
 			self.draw_screen()			
 			self.get_timeline()
 			self.draw_timeline()
+
+		elif cmd == 'theme':
+			self.draw_screen()
+			self.set_theme(params)
+			self.get_timeline()
+			self.draw_timeline()
 						
 		elif cmd == 'search':
 			# Search not implemented in the main python-twitter branch yet -
@@ -322,7 +328,51 @@ class Twyrses(object):
 
 	def set_refresh_timeout(self):
 		self.refresh_timeout = datetime.datetime.now() \
-			+ datetime.timedelta(seconds=REFRESH_TIMEOUT)				
+			+ datetime.timedelta(seconds=REFRESH_TIMEOUT)	
+
+	def set_theme(self, params):
+		if len(params) == 0:
+			self.header.set_text('Enter a theme name')
+			return
+		theme_name = params[0]
+		self.ui.stop()
+		if theme_name == 'default':	
+			self.ui.register_palette([
+				('header',         'default', 'light gray',  'standout'),
+				('timeline',       'default',  'default'               ),
+				('char_count',     'default',  'light gray', 'bold'    ),
+				('char_count_med', 'default',  'light gray', 'bold'    ),
+				('char_count_low', 'default',  'light gray', 'bold'    ),
+				('statusbox',      'default',  'default'               ),
+				('date',           'default',  'default'               ),
+				('name',           'default',  'default',    'bold'    ),
+				('line',           'default',  'default'               )
+				])	
+		if theme_name == 'black':	
+			self.ui.register_palette([
+				('header',         'dark gray', 'light gray', 'standout'),
+				('timeline',       'default',   'default'               ),
+				('char_count',     'white',     'light gray', 'bold'    ),
+				('char_count_med', 'dark gray', 'light gray', 'bold'    ),
+				('char_count_low', 'dark red',  'light gray', 'bold'    ),
+				('statusbox',      'default',   'default'               ),
+				('date',           'default',   'default'               ),
+				('name',           'white',     'default',    'bold'    ),
+				('line',           'dark gray', 'default'               )
+			])
+		if theme_name == 'white':
+			self.ui.register_palette([
+				('header',         'light blue', 'dark red', 'standout'),
+				('timeline',       'default',   'default'               ),
+				('char_count',     'black',     'default', 'bold'    ),
+				('char_count_med', 'light blue', 'default', 'bold'    ),
+				('char_count_low', 'light red',  'default', 'bold'    ),
+				('statusbox',      'default',   'default'               ),
+				('date',           'default',   'default'               ),
+				('name',           'light blue',     'default',    'bold'    ),
+				('line',           'dark gray', 'default'               )
+			])	
+		self.ui.start()
 	
 	#############################################
 	## Twitter Api calls
