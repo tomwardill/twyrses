@@ -462,6 +462,7 @@ def main():
 			sys.stderr.write(__doc__)
 			return
 			
+	print "\033]0;twyrses for " + user.screen_name +"\007"
 	Twyrses().main()
 
 if __name__ == '__main__':
