@@ -235,6 +235,7 @@ class Twyrses(object):
 		elif cmd == 'q':
 			self.set_header_text("bye then")
 			self.exit = True
+			self.ui.stop()
 			
 		elif cmd == 'follows':
 			if not len(params) == 2:
