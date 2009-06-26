@@ -15,7 +15,6 @@
 #	User info persistence
 #	OAuth integration
 #   	Send source parameter
-#	DM support
 #	View ASCII version of user's avatar
 #	message / command buffer
 #	auto complete for friend nicks
@@ -296,6 +295,14 @@ class Twyrses(object):
 			self.draw_timeline()
 			self.last_refresh_command = msg
 			self.set_refresh_timeout()
+			
+		elif cmd =='d' or cmd == 'dm' or cmd == 'directmessages':
+			self.set_header_text("refreshing, hang on a mo...", 0)
+			self.draw_screen()				
+			self.get_timeline('dm')	
+			self.draw_timeline()
+			self.last_refresh_command = msg
+			self.set_refresh_timeout()
 				
 	def draw_screen(self):
 		""" """
@@ -303,11 +310,30 @@ class Twyrses(object):
 		self.ui.draw_screen(self.size, canvas)
 		
 	def draw_status(self, status):
-		return urwid.Columns([
-			('fixed', 6, urwid.Text(('date', HappyDate.date_str(status.created_at).encode(code)))),
-			('fixed', len(status.user.screen_name) + 2, urwid.Text(('name', ('@%s ' % (status.user.screen_name,)).encode(code)))),
-			urwid.Text(status.text.encode(code))		
-		])
+		
+		# check if we're receiving a DM or @reply
+		# replies have a user
+		if hasattr(status, 'user'):
+		
+			status =  urwid.Columns([
+				('fixed', 6, urwid.Text(('date', HappyDate.date_str(status.created_at).encode(code)))),
+				('fixed', len(status.user.screen_name) + 2, urwid.Text(('name', ('@%s ' % (status.user.screen_name,)).encode(code)))),
+				urwid.Text(status.text.encode(code))		
+			])
+		
+			return status
+		# dm's don't, they just have a sender_screen_name directly
+		elif hasattr(status, 'sender_screen_name'):
+			dm =  urwid.Columns([
+				('fixed', 6, urwid.Text(('date', HappyDate.date_str(status.created_at).encode(code)))),
+				('fixed', len(status.sender_screen_name) + 2, urwid.Text(('name', ('@%s ' % (status.sender_screen_name,)).encode(code)))),
+				urwid.Text(status.text.encode(code))		
+			])
+		
+			return dm
+		# dunno what we've got here, send it back
+		else:
+			return None
 			
 	def draw_timeline(self):			
 		self.timeline.body = urwid.PollingListWalker(
@@ -413,8 +439,8 @@ class Twyrses(object):
 				if cmd == "replies":
 					self.status_data = api.GetReplies()
 				# TODO: convert list returned by GetDirectMessages
-				#elif cmd == "dm":
-				#	self.status_data = api.GetDirectMessages()
+				elif cmd == "dm":
+					self.status_data = api.GetDirectMessages()
 				else:
 					self.status_data = api.GetFriendsTimeline()					
 			except HTTPError, e:
