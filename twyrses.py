@@ -44,6 +44,9 @@ from string import zfill
 import urwid, urwid.curses_display
 import twitter
 from urllib2 import HTTPError
+
+#config file imports
+from ConfigParser import *
     
 import locale
 locale.setlocale(locale.LC_ALL, '')
@@ -76,6 +79,8 @@ class User(object):
 		"""TODO: some sort of OAuth magic here"""
 		
 user = User()
+
+configdict = ConfigParser()
 
 class HappyDate(object):
 	"""clap clap"""
@@ -123,17 +128,11 @@ class Twyrses(object):
 	def main(self):
 		""" """
 		self.ui = urwid.curses_display.Screen()
-		self.ui.register_palette([
-			('header',         'dark gray', 'light gray', 'standout'),
-			('timeline',       'default',   'default'               ),
-			('char_count',     'white',     'light gray', 'bold'    ),
-			('char_count_med', 'dark gray', 'light gray', 'bold'    ),
-			('char_count_low', 'dark red',  'light gray', 'bold'    ),
-			('statusbox',      'default',   'default'               ),
-			('date',           'default',   'default'               ),
-			('name',           'white',     'default',    'bold'    ),
-			('line',           'dark gray', 'default'               )
-		])	
+		theme = self.get_config_value("THEME", "theme_name")
+		if theme:
+			self.set_theme([theme])
+		else:
+			self.set_theme(['default'])
 		
 		self.header = urwid.AttrWrap(urwid.Text(''), 'header')
 		self.statusbox = urwid.AttrWrap(urwid.Edit(), 'statusbox')
@@ -263,7 +262,9 @@ class Twyrses(object):
 
 		elif cmd == 'theme':
 			self.draw_screen()
+			self.ui.stop()
 			self.set_theme(params)
+			self.ui.start()
 			self.get_timeline()
 			self.draw_timeline()
 						
@@ -335,19 +336,7 @@ class Twyrses(object):
 			self.header.set_text('Enter a theme name')
 			return
 		theme_name = params[0]
-		self.ui.stop()
-		if theme_name == 'default':	
-			self.ui.register_palette([
-				('header',         'default', 'light gray',  'standout'),
-				('timeline',       'default',  'default'               ),
-				('char_count',     'default',  'light gray', 'bold'    ),
-				('char_count_med', 'default',  'light gray', 'bold'    ),
-				('char_count_low', 'default',  'light gray', 'bold'    ),
-				('statusbox',      'default',  'default'               ),
-				('date',           'default',  'default'               ),
-				('name',           'default',  'default',    'bold'    ),
-				('line',           'default',  'default'               )
-				])	
+		
 		if theme_name == 'black':	
 			self.ui.register_palette([
 				('header',         'dark gray', 'light gray', 'standout'),
@@ -360,7 +349,9 @@ class Twyrses(object):
 				('name',           'white',     'default',    'bold'    ),
 				('line',           'dark gray', 'default'               )
 			])
-		if theme_name == 'white':
+			
+			self.update_config_file("THEME", "theme_name", theme_name)
+		elif theme_name == 'white':
 			self.ui.register_palette([
 				('header',         'light blue', 'dark red', 'standout'),
 				('timeline',       'default',   'default'               ),
@@ -372,7 +363,20 @@ class Twyrses(object):
 				('name',           'light blue',     'default',    'bold'    ),
 				('line',           'dark gray', 'default'               )
 			])	
-		self.ui.start()
+			self.update_config_file("THEME", "theme_name", theme_name)
+		else:	
+			self.ui.register_palette([
+				('header',         'default', 'light gray',  'standout'),
+				('timeline',       'default',  'default'               ),
+				('char_count',     'default',  'light gray', 'bold'    ),
+				('char_count_med', 'default',  'light gray', 'bold'    ),
+				('char_count_low', 'default',  'light gray', 'bold'    ),
+				('statusbox',      'default',  'default'               ),
+				('date',           'default',  'default'               ),
+				('name',           'default',  'default',    'bold'    ),
+				('line',           'default',  'default'               )
+				])	
+			self.update_config_file("THEME", "theme_name", theme_name)
 	
 	#############################################
 	## Twitter Api calls
@@ -452,6 +456,18 @@ class Twyrses(object):
 				self.set_header_text("login to check who is following who")
 			elif e.code == 404:
 				self.set_header_text("can't find @%s" % (twittard1,))
+				
+	def update_config_file(self, section, setting, value):
+		if not configdict.has_section(section):
+			configdict.add_section(section)
+		configdict.set(section, setting, value)
+		f = open('twyrses.conf', 'w')
+		configdict.write(f)
+	
+	def get_config_value(self, section, setting):
+		if not configdict.has_section(section) or not configdict.has_option(section, setting):
+			return None
+		return configdict.get(section, setting)
 		
 def main():
 	if len(sys.argv) > 1:	
@@ -462,7 +478,15 @@ def main():
 			sys.stderr.write(__doc__)
 			return
 			
-	print "\033]0;twyrses for " + user.screen_name +"\007"
+		print "\033]0;twyrses for " + user.screen_name +"\007"
+	else:
+		try:
+			configdict.read('twyrses.conf')
+			user.screen_name = configdict.get('USER', 'name')
+			user.password = configdict.get('USER', 'password')
+		except Exception, err:
+			print err
+			print "config file not found"
 	Twyrses().main()
 
 if __name__ == '__main__':
