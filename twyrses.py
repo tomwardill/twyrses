@@ -287,8 +287,16 @@ class Twyrses(object):
 			self.do_search(terms=" ".join(params))
 			self.draw_timeline()
 			self.last_refresh_command = msg	
-			self.set_refresh_timeout()		
-											
+			self.set_refresh_timeout()
+
+		elif cmd == '@' or cmd == 'replies':
+			self.set_header_text("refreshing, hang on a mo...", 0)
+			self.draw_screen()				
+			self.get_timeline('replies')	
+			self.draw_timeline()
+			self.last_refresh_command = msg
+			self.set_refresh_timeout()
+				
 	def draw_screen(self):
 		""" """
 		canvas = self.top.render(self.size, focus=True)
