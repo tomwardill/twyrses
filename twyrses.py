@@ -18,7 +18,6 @@
 #	View ASCII version of user's avatar
 #	message / command buffer
 #	auto complete for friend nicks
-#	follow / unfollow twittard
 #	delete tweet
 #	Retweet autocompletion - type RT @twittard and up or down arrow
 #		scrolls through available tweets
@@ -120,6 +119,7 @@ class Twyrses(object):
 		self.header_timeout = datetime.datetime.now()
 		self.refresh_timeout = datetime.datetime.now()
 		self.last_refresh_command = "/r"
+			self.set_refresh_timeout()
 		self.exit = False
 		self.cmd_buffer = ['']
 		self.cmd_buffer_idx = 0			
