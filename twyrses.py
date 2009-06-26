@@ -224,7 +224,7 @@ class Twyrses(object):
 		if len(raw) > 1:
 			params = raw[1:]
 						
-		if cmd == 'r':
+		if cmd == 'r' or cmd == 'refresh':
 			self.set_header_text("refreshing, hang on a mo...", 0)
 			self.draw_screen()
 			if len(params) == 0: params = [None]				
@@ -233,11 +233,11 @@ class Twyrses(object):
 			self.last_refresh_command = msg
 			self.set_refresh_timeout()
 			
-		elif cmd == 'q':
+		elif cmd == 'q' or cmd == 'quit':
 			self.set_header_text("bye then")
 			self.exit = True
 			
-		elif cmd == 'follows':
+		elif cmd == 'f' or cmd == 'follows':
 			if not len(params) == 2:
 				self.set_header_text("/follows [twittard1] [twittard2]")
 				return
@@ -245,7 +245,7 @@ class Twyrses(object):
 			self.draw_screen()			
 			self.check_following(params[0], params[1])
 			
-		elif cmd == 'auth':
+		elif cmd == 'a' or cmd == 'auth':
 			if not len(params) == 2 and not len(params) == 0:
 				self.set_header_text("/auth [username] [password]")
 				return			
@@ -261,14 +261,14 @@ class Twyrses(object):
 			self.get_timeline()
 			self.draw_timeline()
 
-		elif cmd == 'theme':
+		elif cmd == 't' or cmd == 'theme':
 			self.draw_screen()
 			self.ui.clear()
 			self.set_theme(params)
 			self.get_timeline()
 			self.draw_timeline()
 						
-		elif cmd == 'search':
+		elif cmd == 's' or cmd == 'search':
 			# Search not implemented in the main python-twitter branch yet -
 			# seriously considering sacking off python-twitter tbh, I mean
 			# it's only a load of json calls innit? will need to anyway
