@@ -333,7 +333,7 @@ class Twyrses(object):
 
 	def set_theme(self, params):
 		if len(params) == 0:
-			self.header.set_text('Enter a theme name')
+			self.header.set_text('Enter a theme name: default/white/black')
 			print self.ui.palette
 			return
 		theme_name = params[0]
