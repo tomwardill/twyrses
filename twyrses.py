@@ -94,7 +94,13 @@ class HappyDate(object):
 		d1 = datetime.datetime(
 			int(dl[5]), HappyDate.months.index(dl[1]), int(dl[2]))
 		td = datetime.datetime.today()
-		d2 = datetime.datetime(td.year, td.month, td.day -1)
+
+        # account for the change in month
+		if td.day - 1 != 0:
+			d2 = datetime.datetime(td.year, td.month, td.day -1)
+		else:
+			d2 = datetime.datetime(td.year, td.month - 1, 1)
+
 		rtn = "%s:%s" % (tl[0], tl[1])
 		if d1 < d2:
 			rtn = "%s\n%s.%s\n %s" % (rtn, zfill(dl[2],2), 
