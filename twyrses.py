@@ -6,17 +6,19 @@
 # Requires:
 #	urwid - http://excess.org/urwid/
 # 	python-twitter - http://code.google.com/p/python-twitter/
+#				http://static.unto.net/python-twitter/0.6/doc/twitter.html
 #
 # To do:
-#	Ghosting
-#		See Timeline from another users POV
-#		Sneakily follow people without them knowing
+#	undo update status in n seconds
+#   Paging for statuses when scrolled to the bottom of the page
+#	User info persistence
+#	auto complete for friend nicks
+#	follow / unfollow twittard
 #	Search
 #	User info persistence
 #	OAuth integration
 #   	Send source parameter
 #	View ASCII version of user's avatar
-#	message / command buffer
 #	auto complete for friend nicks
 #	delete tweet
 #	Retweet autocompletion - type RT @twittard and up or down arrow
@@ -40,8 +42,10 @@ import sys, getpass, pickle
 import datetime
 from string import zfill
 import urwid, urwid.curses_display, urwid.raw_display
-import twitter
+import oauthtwitter
 from urllib2 import HTTPError
+import simplejson
+import webbrowser
 
 #config file imports
 from ConfigParser import *
@@ -56,6 +60,9 @@ CHAR_LIMIT = 140
 CHAR_LIMIT_MED = 120		
 CHAR_LIMIT_LOW = 130
 REFRESH_TIMEOUT = 300
+
+OAUTH_CONSUMER_KEY = 'ButlTUdZbi4s7cAP7dxWVw'
+OAUTH_CONSUMER_SECRET = 'LyHAJlbGk2r984OTWSONF7nQHtLqSHumqu7ldduOFeA'
 
 def log(msg, thefile='log.txt', method='a'):
 	"""Simple debug method"""
@@ -122,13 +129,15 @@ class Twyrses(object):
 	def __init__(self):
 		self.status_data = []		
 		self.status_list = []
+		self.status_count = 0
+		self.status_focus = None
 		self.header_timeout = datetime.datetime.now()
 		self.refresh_timeout = datetime.datetime.now()
 		self.last_refresh_command = "/r"
 		self.set_refresh_timeout()
 		self.exit = False
 		self.cmd_buffer = ['']
-		self.cmd_buffer_idx = 0			
+		self.cmd_buffer_idx = 0
 	
 	def main(self):
 		""" """
@@ -143,8 +152,7 @@ class Twyrses(object):
 		self.statusbox = urwid.AttrWrap(urwid.Edit(), 'statusbox')
 		self.char_count = urwid.AttrWrap(
 			urwid.Text(str(CHAR_LIMIT), align='right'), 'char_count')
-		self.timeline = urwid.ListBox([])
-		
+		self.timeline = urwid.ListBox([])		
 		self.top = urwid.Frame(
 			header=urwid.Pile([
 				urwid.Columns([self.header, ('fixed', 5, self.char_count)]),
@@ -152,8 +160,7 @@ class Twyrses(object):
 				urwid.AttrWrap(urwid.Divider(utf8decode("─")), 'line')
 			]),
 			body=self.timeline
-		)
-		
+		)		
 		self.ui.run_wrapper(self.run)
 				
 	def run(self):
@@ -183,26 +190,27 @@ class Twyrses(object):
 				elif k == 'page up' or k == 'page down':
 					# only scroll half the rows			
 					self.timeline.keypress((self.size[0], self.size[1]/2), k)
-				elif k == 'up' or k == 'down':
-				
-					# TODO: fix buffer index incrementing
-					if k == 'up' and \
-					len(self.cmd_buffer) < self.cmd_buffer_idx:
+					if 'bottom' in self.timeline.ends_visible(self.size):
+						self.status_count += 20
+						self.status_focus = self.timeline.get_focus()
+				elif k == 'up' or k == 'down':				
+					if k == 'up':
 						self.cmd_buffer_idx += 1
-										
-					if k == 'down' and self.cmd_buffer_idx > 0:
+						self.cmd_buffer_idx = min(
+							self.cmd_buffer_idx,
+							len(self.cmd_buffer)-1)
+					if k == 'down':
 						self.cmd_buffer_idx -= 1
-						
-					self.set_header_text(str(self.cmd_buffer_idx))
-										
+						self.cmd_buffer_idx = max(self.cmd_buffer_idx, 0)
 					self.statusbox.set_edit_text(
 						self.cmd_buffer[self.cmd_buffer_idx])					
 				
 				elif k == 'enter':
-					msg = self.statusbox.edit_text
-					self.cmd_buffer.append(msg)
-					self.statusbox.set_edit_text("")
+					msg = self.statusbox.edit_text					
 					if len(msg):
+						self.cmd_buffer.insert(1, msg)
+						self.statusbox.set_edit_text("")
+						self.update_char_count()
 						if msg[:1] == '/':
 							self.handle_command(msg)
 						else:
@@ -266,6 +274,9 @@ class Twyrses(object):
 			self.draw_screen()			
 			self.get_timeline()
 			self.draw_timeline()
+			
+		elif cmd == 'w':
+			webbrowser.open("http://www.google.com/")
 
 		elif cmd == 't' or cmd == 'theme':
 			self.draw_screen()
@@ -275,12 +286,6 @@ class Twyrses(object):
 			self.draw_timeline()
 						
 		elif cmd == 's' or cmd == 'search':
-			# Search not implemented in the main python-twitter branch yet -
-			# seriously considering sacking off python-twitter tbh, I mean
-			# it's only a load of json calls innit? will need to anyway
-			# once we implement OAuth as it doesn't look like that's 
-			# supported yet either.
-			# Anyhoo, enough rambling:
 			return
 			
 			if len(params) == 0:
@@ -342,8 +347,11 @@ class Twyrses(object):
 		if hasattr(status, 'user'):
 		
 			status =  urwid.Columns([
-				('fixed', 6, urwid.Text(('date', HappyDate.date_str(status.created_at).encode(code)))),
-				('fixed', len(status.user.screen_name) + 2, urwid.Text(('name', ('@%s ' % (status.user.screen_name,)).encode(code)))),
+				('fixed', 6, urwid.Text(
+				('date', HappyDate.date_str(status.created_at).encode(code)))),
+				('fixed', len(status.user.screen_name) + 2, 
+				urwid.Text(('name', 
+				('@%s ' % (status.user.screen_name,)).encode(code)))),
 				urwid.Text(status.text.encode(code))		
 			])
 		
@@ -351,8 +359,11 @@ class Twyrses(object):
 		# dm's don't, they just have a sender_screen_name directly
 		elif hasattr(status, 'sender_screen_name'):
 			dm =  urwid.Columns([
-				('fixed', 6, urwid.Text(('date', HappyDate.date_str(status.created_at).encode(code)))),
-				('fixed', len(status.sender_screen_name) + 2, urwid.Text(('name', ('@%s ' % (status.sender_screen_name,)).encode(code)))),
+				('fixed', 6, urwid.Text(('date', 
+				HappyDate.date_str(status.created_at).encode(code)))),
+				('fixed', len(status.sender_screen_name) + 2, 
+				urwid.Text(('name', ('@%s ' % 
+				(status.sender_screen_name,)).encode(code)))),
 				urwid.Text(status.text.encode(code))		
 			])
 		
@@ -447,22 +458,22 @@ class Twyrses(object):
 		"""unfollow a user, mostly used for certain 'celebrity twitards'"""
 		if user.screen_name:
 			for param in params:
-				api = twitter.Api(str(user.screen_name), str(user.password))
+				api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
 				api.DestroyFriendship(param)
 
 	def follow(self, params):
 		if user.screen_name:
 			for param in params:
-				api = twitter.Api(str(user.screen_name), str(user.password))
+				api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
 				api.CreateFriendship(param)
 	
 	def get_timeline(self, cmd=None):
 		"""Get yer timeline on"""
 		
 		if user.screen_name:
-			api = twitter.Api(str(user.screen_name), str(user.password))
+			api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
 		else:
-			api = twitter.Api()
+			api = oauthtwitter.OAuthApi()
 			
 		if cmd and not cmd in ('replies', 'dm'):
 			try:
@@ -492,7 +503,7 @@ class Twyrses(object):
 	def do_search(self, **kwargs):
 		"""Does a search!! woo!!"""
 		try:
-			api = twitter.Api(str(user.screen_name), str(user.password))
+			api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
 			self.status_data = api.Search(kwargs)
 		except HTTPError, e:
 			if e.code == 401:
@@ -501,12 +512,19 @@ class Twyrses(object):
 	def update_status(self, text):
 		"""Update that status"""
 		try:
-			api = twitter.Api(str(user.screen_name), str(user.password))
-			api.PostUpdate(text)
-			st = twitter.Status(
-				created_at=HappyDate.str_date(datetime.datetime.now()),
-            	text=text,
-            	user=user)
+			api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
+			#api.PostUpdate(text)
+			
+			if not api._username:
+			  raise TwitterError("The twitter.Api instance must be authenticated.")
+			if len(text) > 140:
+			  raise TwitterError("Text must be less than or equal to 140 characters.")
+			url = 'http://twitter.com/statuses/update.json'
+			data = {'status': text, 'source': 'twyrses'}
+			json = api._FetchUrl(url, post_data=data)
+			data = simplejson.loads(json)
+			st = Status.NewFromJsonDict(data)			
+			
 			self.status_data.insert(0, st)
 			self.draw_timeline()
 		except HTTPError, e:
@@ -517,7 +535,7 @@ class Twyrses(object):
 		"""Check if one twittard is following another"""
 		try:
 			# weirdly, this works when screen_name and password are None
-			api = twitter.Api(str(user.screen_name), str(user.password))
+			api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
 			f = api.GetFriends(user=twittard1)
 			if any(u for u in f if u.screen_name == twittard2):
 				self.set_header_text("yup, @%s follows @%s" % 
