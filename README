@@ -5,5 +5,5 @@ A curses based twitter client
 Required:
 
 	urwid - http://excess.org/urwid/
-	python-twitter - http://code.google.com/p/python-twitter/
+	tweepy - http://github.com/joshthecoder/tweepy (included as git submodule)
 
