@@ -57,7 +57,7 @@ import webbrowser
 
 # Twitter library imports
 import os
-current_file_path = os.path.abspath(__file__)
+current_file_path = os.path.dirname(__file__)
 sys.path.append(os.path.join(current_file_path, 'tweepy'))
 import tweepy
 
@@ -529,6 +529,11 @@ class Twyrses(object):
         configdict.write(f)
 
     def get_config_value(self, section, setting):
+        try:
+            configdict.read('twyrses.conf')
+        except:
+            return None
+            
         if not configdict.has_section(section) or not configdict.has_option(section, setting):
             return None
         return configdict.get(section, setting)
