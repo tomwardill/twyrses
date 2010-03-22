@@ -275,7 +275,6 @@ class Twyrses(object):
             self.draw_timeline()
 
         elif cmd == 's' or cmd == 'search':
-            return
 
             if len(params) == 0:
                 self.set_header_text("/search [terms]")
@@ -283,7 +282,10 @@ class Twyrses(object):
             self.set_header_text("searching, wait on...")
             self.draw_screen()
             # TODO: exapnd this to encompass terms, from_user, to_user
-            self.do_search(terms=" ".join(params))
+            if len(params) > 1:
+                self.do_search(terms=" ".join(params))
+            else:
+                self.do_search(terms = params[0])
             self.draw_timeline()
             self.last_refresh_command = msg	
             self.set_refresh_timeout()
@@ -358,6 +360,19 @@ class Twyrses(object):
             ])
 
             return dm
+        if hasattr(status, 'from_user'):
+
+                status =  urwid.Columns([
+                    ('fixed', 12, urwid.Text(
+                        #('date', HappyDate.date_str(status.created_at).encode(code)))),
+                        ('date', HappyDate.date_str(status.created_at).encode(code)))),
+                    ('fixed', 17, 
+                     urwid.Text(('name', 
+                                 ('@%s ' % (status.from_user,)).encode(code)))),
+                    urwid.Text(status.text.encode(code))		
+                ])
+
+                return status
         # dunno what we've got here, send it back
         else:
             return None
@@ -485,14 +500,13 @@ class Twyrses(object):
         else:
             self.status_data = api.GetPublicTimeline()
 
-    def do_search(self, **kwargs):
+    def do_search(self, terms = ""):
         """Does a search!! woo!!"""
-        try:
-            api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
-            self.status_data = api.Search(kwargs)
-        except HTTPError, e:
-            if e.code == 401:
-                self.set_header_text("login to search")
+        api = self.get_api()
+        search_data = api.search(terms)
+        for s in search_data:
+            log(str(dir(s)))
+        self.status_data = search_data
 
     def update_status(self, text):
         """Update that status"""
