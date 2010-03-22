@@ -107,36 +107,9 @@ class HappyDate(object):
               'Sep', 'Oct', 'Nov', 'Dec']	
     @staticmethod
     def date_str(s):
-        """Make a happy date string.
-        Prettify the date string returned by the twitter API
+        """Format the date into something to display
         """
-        dl = s.split(' ')
-        tl = dl[3].split(':')    
-        d1 = datetime.datetime(
-            int(dl[5]), HappyDate.months.index(dl[1]), int(dl[2]))
-        td = datetime.datetime.today()
-
-    # account for the change in month
-        if td.day - 1 != 0:
-            d2 = datetime.datetime(td.year, td.month, td.day -1)
-        else:
-            d2 = datetime.datetime(td.year, td.month - 1, 1)
-
-        rtn = "%s:%s" % (tl[0], tl[1])
-        if d1 < d2:
-            rtn = "%s\n%s.%s\n %s" % (rtn, zfill(dl[2],2), 
-                                      zfill(HappyDate.months.index(dl[1]),2), dl[5])    	
-        return rtn
-
-    @staticmethod
-    def str_date(d):
-        """Make a sad date string.
-        Converts a date object into a string vaguely similar to the one 
-        returned by the twitter API, which is then reconverted with the
-        date_str method. sigh... all a bit futile really.
-        """
-        return "xxx %s %s %s:%s:00 +0000 %s" % (HappyDate.months[d.month], 
-                                                zfill(d.day, 2), zfill(d.hour, 2), zfill(d.minute, 2), d.year)
+        return s.strftime('%b%d  %H:%M')
 
 class Twyrses(object):
     """ """
@@ -362,6 +335,7 @@ class Twyrses(object):
 
             status =  urwid.Columns([
                 ('fixed', 6, urwid.Text(
+                    #('date', HappyDate.date_str(status.created_at).encode(code)))),
                     ('date', HappyDate.date_str(status.created_at).encode(code)))),
                 ('fixed', len(status.user.screen_name) + 2, 
                  urwid.Text(('name', 
@@ -485,7 +459,7 @@ class Twyrses(object):
         """Get yer timeline on"""
 
         if user.screen_name:
-            api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
+            api = self.get_api()
         else:
             api = oauthtwitter.OAuthApi()
 
@@ -506,7 +480,7 @@ class Twyrses(object):
                 elif cmd == "dm":
                     self.status_data = api.GetDirectMessages()
                 else:
-                    self.status_data = api.GetFriendsTimeline()					
+                    self.status_data = api.home_timeline()					
             except HTTPError, e:
                 if e.code == 401:
                     self.set_header_text(
@@ -574,6 +548,10 @@ class Twyrses(object):
         if not configdict.has_section(section) or not configdict.has_option(section, setting):
             return None
         return configdict.get(section, setting)
+    
+    def get_api(self):
+        auth = tweepy.BasicAuthHandler(str(user.screen_name), str(user.password))
+        return tweepy.API(auth)
 
 def update_terminal_header(update):
     print "\033]0;twyrses for " + update +"\007"
