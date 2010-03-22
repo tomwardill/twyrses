@@ -475,7 +475,7 @@ class Twyrses(object):
                     self.status_data = api.mentions()
                 # TODO: convert list returned by GetDirectMessages
                 elif cmd == "dm":
-                    self.status_data = api.GetDirectMessages()
+                    self.status_data = api.direct_messages()
                 else:
                     self.status_data = api.home_timeline()					
             except HTTPError, e:
