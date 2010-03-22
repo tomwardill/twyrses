@@ -444,16 +444,14 @@ class Twyrses(object):
 
     def unfollow(self, params):
         """unfollow a user, mostly used for certain 'celebrity twitards'"""
-        if user.screen_name:
-            for param in params:
-                api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
-                api.DestroyFriendship(param)
+        api = self.get_api()
+        for param in params:
+            api.destroy_friendship(param)
 
     def follow(self, params):
-        if user.screen_name:
-            for param in params:
-                api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
-                api.CreateFriendship(param)
+        api = self.get_api()
+        for param in params:
+            api.create_friendship(param)
 
     def get_timeline(self, cmd=None):
         """Get yer timeline on"""
