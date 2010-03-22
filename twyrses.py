@@ -505,21 +505,10 @@ class Twyrses(object):
 
     def check_following(self, twittard1, twittard2):
         """Check if one twittard is following another"""
-        try:
             # weirdly, this works when screen_name and password are None
-            api = oauthtwitter.OAuthApi(str(user.screen_name), str(user.password))
-            f = api.GetFriends(user=twittard1)
-            if any(u for u in f if u.screen_name == twittard2):
-                self.set_header_text("yup, @%s follows @%s" % 
-                                     (twittard1, twittard2))
-            else:
-                self.set_header_text("nup, @%s does not follow @%s" % 
-                                     (twittard1, twittard2))
-        except HTTPError, e:
-            if e.code == 401:
-                self.set_header_text("login to check who is following who")
-            elif e.code == 404:
-                self.set_header_text("can't find @%s" % (twittard1,))
+        api = self.get_api()
+        result = api.exists_friendship(twittard1, twittard2)
+        return result
 
     def update_config_file(self, section, setting, value):
         if not configdict.has_section(section):
