@@ -109,7 +109,7 @@ class HappyDate(object):
     def date_str(s):
         """Format the date into something to display
         """
-        return s.strftime('%b%d  %H:%M')
+        return s.strftime('%b%d %H:%M')
 
 class Twyrses(object):
     """ """
@@ -236,6 +236,7 @@ class Twyrses(object):
         elif cmd == 'q' or cmd == 'quit':
             self.set_header_text("bye then")
             self.exit = True
+            print '\x1b[H\x1b[2J'
 
         elif cmd == 'f' or cmd == 'follows':
             if not len(params) == 2:
@@ -334,10 +335,10 @@ class Twyrses(object):
         if hasattr(status, 'user'):
 
             status =  urwid.Columns([
-                ('fixed', 6, urwid.Text(
+                ('fixed', 12, urwid.Text(
                     #('date', HappyDate.date_str(status.created_at).encode(code)))),
                     ('date', HappyDate.date_str(status.created_at).encode(code)))),
-                ('fixed', len(status.user.screen_name) + 2, 
+                ('fixed', 17, 
                  urwid.Text(('name', 
                              ('@%s ' % (status.user.screen_name,)).encode(code)))),
                 urwid.Text(status.text.encode(code))		
@@ -347,9 +348,9 @@ class Twyrses(object):
         # dm's don't, they just have a sender_screen_name directly
         elif hasattr(status, 'sender_screen_name'):
             dm =  urwid.Columns([
-                ('fixed', 6, urwid.Text(('date', 
+                ('fixed', 12, urwid.Text(('date', 
                                          HappyDate.date_str(status.created_at).encode(code)))),
-                ('fixed', len(status.sender_screen_name) + 2, 
+                ('fixed', 17, 
                  urwid.Text(('name', ('@%s ' % 
                                       (status.sender_screen_name,)).encode(code)))),
                 urwid.Text(status.text.encode(code))		
