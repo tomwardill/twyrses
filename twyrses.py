@@ -236,6 +236,7 @@ class Twyrses(object):
         elif cmd == 'q' or cmd == 'quit':
             self.set_header_text("bye then")
             self.exit = True
+            # Clear the terminal, so it doesn't end up covered in tweets
             print '\x1b[H\x1b[2J'
 
         elif cmd == 'f' or cmd == 'follows':
