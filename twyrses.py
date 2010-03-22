@@ -458,10 +458,7 @@ class Twyrses(object):
     def get_timeline(self, cmd=None):
         """Get yer timeline on"""
 
-        if user.screen_name:
-            api = self.get_api()
-        else:
-            api = oauthtwitter.OAuthApi()
+        api = self.get_api()
 
         if cmd and not cmd in ('replies', 'dm'):
             try:
@@ -475,7 +472,7 @@ class Twyrses(object):
         elif user.screen_name:
             try:
                 if cmd == "replies":
-                    self.status_data = api.GetReplies()
+                    self.status_data = api.mentions()
                 # TODO: convert list returned by GetDirectMessages
                 elif cmd == "dm":
                     self.status_data = api.GetDirectMessages()
