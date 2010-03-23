@@ -19,3 +19,12 @@ urlpatterns = patterns('',
     
     url(r'^$', views.home, name = 'home')
 )
+
+
+import settings
+# Debug pattern for serving media
+# ------------------------------------------------
+if settings.DEBUG:
+   urlpatterns += patterns('',
+      (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+)

@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+
+	<title>twyrses</title>
+    
+	<link href="{{ MEDIA_URL }}twyrses.css" rel="stylesheet" type="text/css" media="screen" />
+    </head>
+    
+    <body>
+    
+    <div id="container">
+    
+	<div id="header">
+	    <h1><span>Twyrses</span></h1>
+	    <h2><span>The twitter client you never thought would exist...</span></h2><h3><span>(and are probably wondering why it now does.)</span></h3>
+	</div>
+	
+	<div id="body">
+    
+	    {% block content %}
+	    {% endblock content %}
+	
+	</div>
+	
+	<div id="footer">
+	    <ul>
+		<li>About</li>
+		<li>Code</li>
+		<li>Contributers</li>
+	    </ul>
+	</div>
+    
+    </div>
+    
+    </body>
+    
+</html>
