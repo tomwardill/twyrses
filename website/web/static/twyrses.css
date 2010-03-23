@@ -12,6 +12,7 @@ body
     background-color: #efefef;
     border: 1px solid;
     padding: 10px;
+    min-width: 620px;
 }
 
 #header h1,#header h2,#header h3
