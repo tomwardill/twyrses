@@ -4,15 +4,71 @@
 
 <h3>Description</h3>
 
-<p>Twyrses is an ncurses based twitter client. For using twitter in a shell, without the expense of a nasty windowing system. It's fairly basic, but will let you view tweets, post tweets and some other functions.</p>
-<p>Written in python and urwid, using tweepy as the twitter backend, mostly conceived with the assitance of alcohol, and expanded through 'well-I've-started-now-ness'.</p>
+    <p>Twyrses is an ncurses based twitter client. For using twitter in a shell, without the expense of a nasty windowing system. It's fairly basic, but will let you view tweets, post tweets and some other functions.</p>
+    <p>Written in python and urwid, using tweepy as the twitter backend, mostly conceived with the assitance of alcohol, and expanded through 'well-I've-started-now-ness'.</p>
 
 <h3>Screenshots</h3>
 
-<img src="{{ MEDIA_URL }}/twyrses.png" alt="Twyrses running in a terminal with the white theme" width="600"/>
+    <a href="{{ MEDIA_URL }}/twyrses.png"><img src="{{ MEDIA_URL }}/twyrses.png" alt="Twyrses running in a terminal with the white theme" width="600" /></a>
 
 <h3>Installation</h3>
+
+    <p>At the moment, there are no packages available. If you have the dependencies (tweety, urwid) installed, then this link might work: <a href="http://github.com/tomwardill/twyrses/raw/master/twyrses.py">Latest Twyrses</a></p>
+    <p>However, the most reliable way to run Twyrses is to follow the contributing instructions below, and obtain a code checkout.</p>
+
 <h3>Usage</h3>
+
+    <p>Start Twyrses with 'python twyrses.py'.</p>
+    <p>To post a tweet, just type, and press Enter</p>
+    <p>Commands are prefaced with a '/'.</p>
+    <p>
+        <table>
+            <thead>
+                <th>Command</th>
+                <th>Result</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>/r</td>
+                    <td>Refresh your timeline, or return to the timeline</td>
+                </tr>
+                <tr>
+                    <td>/@</td>
+                    <td>View mentions (or @replies)</td>
+                </tr>
+                <tr>
+                    <td>/d</td>
+                    <td>View Direct Messages</td>
+                </tr>
+                <tr>
+                    <td>/s 'term'</td>
+                    <td>Search for 'term'</td>
+                </tr>
+                <tr>
+                    <td>/t</td>
+                    <td>Set theme. Currently available: Default, White, Black</td>
+                </tr>
+                <tr>
+                    <td>/f 'twittard1' 'twittard2'</td>
+                    <td>Check if twittard1 follows twittard2</td>
+                </tr>
+                <tr>
+                    <td>/q</td>
+                    <td>Quit</td>
+                </tr>
+                <tr>
+                    <td>/unfollow</td>
+                    <td>Unfollow a friend twittard</td>
+                </tr>
+                <tr>
+                    <td>/follow</td>
+                    <td>Make a twittard a friend</td>
+                </tr>
+            </tbody>
+        </table>
+    </p>
+
+
 <h3>Contribute</h3>
 
 {% endblock content %}
