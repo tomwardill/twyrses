@@ -129,7 +129,7 @@ class Twyrses(object):
     def main(self):
         """ """
         self.ui = urwid.raw_display.Screen()
-        theme = self.get_config_value("THEME", "theme_name")
+        theme = Twyrses.get_config_value("THEME", "theme_name")
         if theme:
             self.set_theme([theme])
         else:
@@ -524,14 +524,16 @@ class Twyrses(object):
         result = api.exists_friendship(twittard1, twittard2)
         return result
 
-    def update_config_file(self, section, setting, value):
+    @staticmethod
+    def update_config_file(section, setting, value):
         if not configdict.has_section(section):
             configdict.add_section(section)
         configdict.set(section, setting, value)
         f = open('twyrses.conf', 'w')
         configdict.write(f)
 
-    def get_config_value(self, section, setting):
+    @staticmethod
+    def get_config_value(section, setting):
         try:
             configdict.read('twyrses.conf')
         except:
@@ -542,8 +544,25 @@ class Twyrses(object):
         return configdict.get(section, setting)
     
     def get_api(self):
-        auth = tweepy.BasicAuthHandler(str(user.screen_name), str(user.password))
-        return tweepy.API(auth)
+
+        key = Twyrses.get_config_value('OAUTH', 'key')
+        secret = Twyrses.get_config_value('OAUTH', 'secret')
+        
+        if key and secret:
+            auth = tweepy.OAuthHandler(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
+            auth.set_access_token(key, secret)
+            
+            api = tweepy.API(auth)
+            
+            # set our username
+            if not user.screen_name:
+                user.screen_name = api.me().screen_name
+                user.authenticate = True
+            
+            return api
+        else:
+            auth = tweepy.BasicAuthHandler(str(user.screen_name), str(user.password))
+            return tweepy.API(auth)
 
 def update_terminal_header(update):
     print "\033]0;twyrses for " + update +"\007"
@@ -557,14 +576,20 @@ def main():
             sys.stderr.write(__doc__)
             return
     else:
-        try:
-            configdict.read('twyrses.conf')
-            user.screen_name = configdict.get('USER', 'name')
-            user.password = configdict.get('USER', 'password')
-        except Exception, err:
-            print err
-            print "config file not found"
-
+        
+        key = Twyrses.get_config_value('OAUTH', 'key')
+        secret = Twyrses.get_config_value('OAUTH', 'secret')
+        if not key and not secret:
+            # attempt an oauth login
+            auth = tweepy.OAuthHandler(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
+            print 'Go here and authoramise things: '
+            print auth.get_authorization_url()
+            key = raw_input('And enter the key here: ')
+            auth.get_access_token(key)
+            Twyrses.update_config_file('OAUTH', 'key', auth.access_token.key)
+            Twyrses.update_config_file('OAUTH', 'secret', auth.access_token.secret)
+            
+        
     if user.screen_name:
         update_terminal_header(user.screen_name)
 
