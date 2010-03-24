@@ -17,7 +17,9 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # (r'^admin/', include(admin.site.urls)),
     
-    url(r'^$', views.home, name = 'home')
+    url(r'^$', views.home, name = 'home'),
+    url(r'^license/$', views.license, name = 'license'),
+    url(r'^contributors/$', views.contributors, name = 'contributors')
 )
 
 
