@@ -1,9 +1,0 @@
-twyrses
-
-A curses based twitter client
-
-Required:
-
-	urwid - http://excess.org/urwid/
-	tweepy - http://github.com/joshthecoder/tweepy (included as git submodule)
-
