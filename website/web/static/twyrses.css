@@ -82,3 +82,8 @@ body
 {
     display: inline;
 }
+
+#footer a
+{
+    text-decoration: none;
+}
